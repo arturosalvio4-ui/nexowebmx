@@ -266,6 +266,17 @@ footer{border-top:1px solid var(--border);padding:3rem 2.5rem 2rem;max-width:110
   .hero-card{grid-template-columns:repeat(2,1fr)}
   .pricing-grid{grid-template-columns:1fr}
 }
+/* SCROLL REVEAL */
+.reveal{
+  opacity:0;
+  transform:translateY(28px);
+  transition:opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+  will-change:opacity,transform;
+}
+.reveal.visible{opacity:1;transform:translateY(0);}
+@media(prefers-reduced-motion:reduce){
+  .reveal{transition:none !important;opacity:1 !important;transform:none !important;}
+}
 </style>
 </head>
 <body>
@@ -683,6 +694,30 @@ function toggleNav(){
   document.getElementById('mobileMenu').classList.toggle('open');
   document.getElementById('hamburger').classList.toggle('active');
 }
+// ===== ANIMACIONES AL HACER SCROLL =====
+// Aparecen al bajar y llegar a ellas, desaparecen si subes y salen de la vista.
+(function(){
+  const selectors = '.eyebrow, .hero h1, .hero-sub, .hero-actions, .hero-card, .sec-label, .sec-title, .sec-sub, .feat-card, .p-card, .port-card, .faq-item, .badge, .cta-box, .footer-brand, .footer-col';
+  const els = document.querySelectorAll(selectors);
+  els.forEach(el => el.classList.add('reveal'));
+
+  // Escalona la aparición de tarjetas dentro del mismo grupo (una tras otra)
+  const groups = document.querySelectorAll('.features-grid, .pricing-grid, .portfolio-grid, .badges-row, .faq-list, .hero-actions');
+  groups.forEach(group => {
+    Array.from(group.children).forEach((child, i) => {
+      if (child.classList.contains('reveal')) child.style.transitionDelay = (i * 0.08) + 's';
+    });
+  });
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      entry.target.classList.toggle('visible', entry.isIntersecting);
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+
+  els.forEach(el => io.observe(el));
+})();
+
 function toggleFaq(btn){
   const a=btn.nextElementSibling;
   const icon=btn.querySelector('.faq-icon');
