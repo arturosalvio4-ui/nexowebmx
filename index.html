@@ -269,11 +269,14 @@ footer{border-top:1px solid var(--border);padding:3rem 2.5rem 2rem;max-width:110
 /* SCROLL REVEAL */
 .reveal{
   opacity:0;
-  transform:translateY(28px);
-  transition:opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+  transition:opacity .8s cubic-bezier(.22,.61,.36,1), transform .8s cubic-bezier(.22,.61,.36,1);
   will-change:opacity,transform;
 }
-.reveal.visible{opacity:1;transform:translateY(0);}
+.reveal-up{transform:translateY(36px);}
+.reveal-left{transform:translateX(-60px);}
+.reveal-right{transform:translateX(60px);}
+.reveal-scale{transform:scale(.9);}
+.reveal.visible{opacity:1;transform:translate(0,0) scale(1);}
 @media(prefers-reduced-motion:reduce){
   .reveal{transition:none !important;opacity:1 !important;transform:none !important;}
 }
@@ -696,26 +699,56 @@ function toggleNav(){
 }
 // ===== ANIMACIONES AL HACER SCROLL =====
 // Aparecen al bajar y llegar a ellas, desaparecen si subes y salen de la vista.
+// Cada tipo de elemento entra desde una dirección distinta para un efecto más dinámico.
 (function(){
-  const selectors = '.eyebrow, .hero h1, .hero-sub, .hero-actions, .hero-card, .sec-label, .sec-title, .sec-sub, .feat-card, .p-card, .port-card, .faq-item, .badge, .cta-box, .footer-brand, .footer-col';
-  const els = document.querySelectorAll(selectors);
-  els.forEach(el => el.classList.add('reveal'));
+  // Elementos con una sola dirección fija
+  const fixedMap = [
+    { sel: '.eyebrow', variant: 'reveal-scale' },
+    { sel: '.hero h1', variant: 'reveal-up' },
+    { sel: '.hero-sub', variant: 'reveal-right' },
+    { sel: '.hero-actions', variant: 'reveal-up' },
+    { sel: '.hero-card', variant: 'reveal-scale' },
+    { sel: '.sec-label', variant: 'reveal-left' },
+    { sel: '.sec-title', variant: 'reveal-up' },
+    { sel: '.sec-sub', variant: 'reveal-right' },
+    { sel: '.faq-item', variant: 'reveal-up' },
+    { sel: '.cta-box', variant: 'reveal-scale' },
+    { sel: '.footer-brand', variant: 'reveal-left' },
+  ];
+  fixedMap.forEach(({ sel, variant }) => {
+    document.querySelectorAll(sel).forEach(el => el.classList.add('reveal', variant));
+  });
+
+  // Elementos que alternan entrada izquierda/derecha según su posición
+  function alternate(selector, evenVariant, oddVariant){
+    document.querySelectorAll(selector).forEach((el, i) => {
+      el.classList.add('reveal', i % 2 === 0 ? evenVariant : oddVariant);
+    });
+  }
+  alternate('.feat-card', 'reveal-left', 'reveal-right');
+  alternate('.port-card', 'reveal-left', 'reveal-right');
+  alternate('.footer-col', 'reveal-left', 'reveal-right');
+
+  // Tarjetas de precios y badges: efecto de aparición con zoom suave
+  document.querySelectorAll('.p-card').forEach(el => el.classList.add('reveal', 'reveal-scale'));
+  document.querySelectorAll('.badge').forEach(el => el.classList.add('reveal', 'reveal-scale'));
 
   // Escalona la aparición de tarjetas dentro del mismo grupo (una tras otra)
-  const groups = document.querySelectorAll('.features-grid, .pricing-grid, .portfolio-grid, .badges-row, .faq-list, .hero-actions');
+  const groups = document.querySelectorAll('.features-grid, .pricing-grid, .portfolio-grid, .badges-row, .faq-list, .hero-actions, .footer-grid');
   groups.forEach(group => {
     Array.from(group.children).forEach((child, i) => {
-      if (child.classList.contains('reveal')) child.style.transitionDelay = (i * 0.08) + 's';
+      if (child.classList.contains('reveal')) child.style.transitionDelay = (i * 0.1) + 's';
     });
   });
 
+  const allReveal = document.querySelectorAll('.reveal');
   const io = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       entry.target.classList.toggle('visible', entry.isIntersecting);
     });
   }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
 
-  els.forEach(el => io.observe(el));
+  allReveal.forEach(el => io.observe(el));
 })();
 
 function toggleFaq(btn){
