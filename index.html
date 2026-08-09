@@ -146,6 +146,28 @@ nav{
 .featured .p-cta:hover{background:#7c74ff}
 .p-note{font-size:0.72rem;color:var(--muted);margin-top:1.5rem;font-style:italic}
 
+/* AUTH MODAL */
+.auth-overlay{position:fixed;inset:0;background:rgba(4,5,9,0.75);backdrop-filter:blur(4px);z-index:400;display:none;align-items:center;justify-content:center;padding:20px;}
+.auth-overlay.open{display:flex}
+.auth-modal{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:2rem 1.75rem;position:relative;box-shadow:0 30px 90px rgba(0,0,0,0.55);}
+.auth-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;padding:4px;}
+.auth-close:hover{color:var(--bone)}
+.auth-title{font-family:'Outfit',sans-serif;font-size:1.35rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.4rem}
+.auth-sub{font-size:0.83rem;color:var(--muted);line-height:1.5;margin-bottom:1.5rem}
+.auth-field{position:relative;margin-bottom:0.85rem}
+.auth-field input{width:100%;box-sizing:border-box;padding:0.7rem 0.9rem;border-radius:9px;border:1px solid var(--border2);background:var(--bg3);color:var(--bone);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;}
+.auth-field input:focus{border-color:var(--accent)}
+.auth-field input::placeholder{color:var(--muted)}
+.auth-submit{width:100%;padding:0.75rem;border-radius:9px;border:none;background:var(--accent);color:#fff;font-weight:600;font-size:0.9rem;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity .2s;margin-top:0.3rem;}
+.auth-submit:hover{opacity:0.88}
+.auth-submit:disabled{opacity:0.6;cursor:default}
+.auth-switch{text-align:center;font-size:0.82rem;color:var(--muted);margin-top:1.2rem}
+.auth-switch button{background:none;border:none;color:var(--accent2);font-weight:600;cursor:pointer;font-size:0.82rem;font-family:'Inter',sans-serif;}
+.auth-msg{font-size:0.78rem;padding:0.6rem 0.75rem;border-radius:8px;margin-top:0.9rem;display:none;line-height:1.4;}
+.auth-msg.show{display:block}
+.auth-msg.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5}
+.auth-msg.success{background:rgba(34,211,160,0.1);border:1px solid rgba(34,211,160,0.3);color:var(--green)}
+
 /* PORTAFOLIO */
 .portfolio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem;margin-top:2.5rem}
 .port-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color 0.3s,transform 0.3s;}
@@ -265,12 +287,41 @@ footer{border-top:1px solid var(--border);padding:3rem 2.5rem 2rem;max-width:110
     <a href="#planes-tienda">Paquetes Tienda</a>
     <a href="#portafolio">Portafolio</a>
     <a href="#faq">FAQ</a>
+    <a href="#" onclick="openAuthModal('login');return false;">Iniciar sesión</a>
     <a href="#contacto" class="nav-btn">Cotizar gratis</a>
   </div>
   <div class="hamburger" id="hamburger" onclick="toggleNav()">
     <span></span><span></span><span></span>
   </div>
 </nav>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="closeAuthModal()" aria-label="Cerrar">×</button>
+    <div class="auth-title" id="authTitle">Ingresa a tu panel</div>
+    <div class="auth-sub" id="authSub">Consulta el estado de tu proyecto con NexoWeb.</div>
+
+    <form id="authForm">
+      <div class="auth-field" id="usernameField" style="display:none">
+        <input type="text" id="authUsername" placeholder="Nombre de usuario" autocomplete="username"/>
+      </div>
+      <div class="auth-field">
+        <input type="email" id="authEmail" placeholder="Correo electrónico" autocomplete="email" required/>
+      </div>
+      <div class="auth-field">
+        <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required/>
+      </div>
+      <button type="submit" class="auth-submit" id="authSubmitBtn">Iniciar sesión</button>
+      <div class="auth-msg" id="authMsg"></div>
+    </form>
+
+    <div class="auth-switch">
+      <span id="authSwitchText">¿Aún no tienes cuenta?</span>
+      <button type="button" onclick="toggleAuthMode()" id="authSwitchBtn">Regístrate</button>
+    </div>
+  </div>
+</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -685,6 +736,118 @@ document.querySelectorAll('.p-cta').forEach(btn => {
     }
     document.getElementById('contacto').scrollIntoView({behavior:'smooth'});
   });
+});
+
+// ===== AUTH MODAL (registro/login de clientes) =====
+// 1) Reemplaza con los datos de tu proyecto Supabase (Settings → API)
+const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+const SUPABASE_ANON_KEY = "TU-LLAVE-PUBLICA-ANON";
+// 2) Crea un 2do formulario en formspree.io (además del de cotización) y pon aquí su endpoint,
+//    para que te llegue un correo cada vez que alguien se registra.
+const FORMSPREE_REGISTER_ENDPOINT = "https://formspree.io/f/TU-ENDPOINT-DE-REGISTRO";
+
+let authMode = "login"; // "login" | "register"
+
+function openAuthModal(mode) {
+  authMode = mode || "login";
+  updateAuthUI();
+  document.getElementById("authOverlay").classList.add("open");
+}
+function closeAuthModal() {
+  document.getElementById("authOverlay").classList.remove("open");
+  hideAuthMsg();
+}
+function toggleAuthMode() {
+  authMode = authMode === "login" ? "register" : "login";
+  updateAuthUI();
+}
+function updateAuthUI() {
+  const isRegister = authMode === "register";
+  document.getElementById("authTitle").textContent = isRegister ? "Crea tu cuenta de cliente" : "Ingresa a tu panel";
+  document.getElementById("authSub").textContent = isRegister
+    ? "Regístrate para dar seguimiento a tu página web con NexoWeb."
+    : "Consulta el estado de tu proyecto con NexoWeb.";
+  document.getElementById("usernameField").style.display = isRegister ? "block" : "none";
+  document.getElementById("authUsername").required = isRegister;
+  document.getElementById("authSubmitBtn").textContent = isRegister ? "Crear cuenta" : "Iniciar sesión";
+  document.getElementById("authSwitchText").textContent = isRegister ? "¿Ya tienes cuenta?" : "¿Aún no tienes cuenta?";
+  document.getElementById("authSwitchBtn").textContent = isRegister ? "Inicia sesión" : "Regístrate";
+  hideAuthMsg();
+}
+function showAuthMsg(text, tone) {
+  const el = document.getElementById("authMsg");
+  el.textContent = text;
+  el.className = "auth-msg show " + tone;
+}
+function hideAuthMsg() {
+  const el = document.getElementById("authMsg");
+  el.className = "auth-msg";
+}
+
+async function supabaseRequest(path, options = {}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    ...options,
+    headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY, ...(options.headers || {}) },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.msg || data.error_description || data.message || "Error");
+  return data;
+}
+
+document.getElementById("authForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const btn = document.getElementById("authSubmitBtn");
+  const username = document.getElementById("authUsername").value.trim();
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+
+  btn.disabled = true;
+  hideAuthMsg();
+
+  try {
+    if (authMode === "register") {
+      if (password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
+
+      const signUpData = await supabaseRequest("/auth/v1/signup", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const userId = signUpData?.user?.id || signUpData?.id;
+      const accessToken = signUpData?.access_token;
+
+      if (userId && accessToken) {
+        await supabaseRequest("/rest/v1/profiles", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + accessToken, Prefer: "return=minimal" },
+          body: JSON.stringify({ id: userId, username }),
+        });
+      }
+
+      // Notificación por correo a ti (mismo patrón que el formulario de cotización)
+      fetch(FORMSPREE_REGISTER_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          asunto: "Nuevo registro de cliente en NexoWeb",
+          usuario: username,
+          correo: email,
+        }),
+      }).catch(() => {});
+
+      showAuthMsg("Cuenta creada. Revisa tu correo para confirmar el registro.", "success");
+      document.getElementById("authForm").reset();
+    } else {
+      const data = await supabaseRequest("/auth/v1/token?grant_type=password", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      showAuthMsg("Bienvenido de vuelta, " + (data?.user?.email || "") + ".", "success");
+    }
+  } catch (err) {
+    showAuthMsg(err.message || "Algo salió mal. Intenta de nuevo.", "error");
+  }
+  btn.disabled = false;
 });
 
 // FORM SUBMIT → Formspree
