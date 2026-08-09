@@ -76,6 +76,7 @@ nav{
 .nav-btn:hover{opacity:0.85;background:var(--accent)!important}
 .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
 .hamburger span{display:block;width:22px;height:2px;background:var(--bone);border-radius:2px;transition:all 0.3s}
+.mobile-menu{display:none}
 
 /* HERO */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:7rem 2rem 5rem;position:relative;overflow:hidden;}
@@ -238,8 +239,23 @@ footer{border-top:1px solid var(--border);padding:3rem 2.5rem 2rem;max-width:110
   nav{padding:0 1.25rem}
   .nav-links{display:none}
   .hamburger{display:flex}
-  .nav-links.open{display:flex;flex-direction:column;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--bg2);padding:2rem 1.5rem;gap:0.5rem;z-index:150;}
-  .nav-links.open a{font-size:1rem;padding:0.7rem 1rem}
+  .mobile-menu.open{
+    display:flex;flex-direction:column;
+    position:fixed;top:64px;left:0;right:0;bottom:0;
+    background:var(--bg2);padding:2rem 1.5rem;gap:0.5rem;
+    z-index:150;overflow-y:auto;
+  }
+  .mobile-menu.open a{
+    color:var(--bone);font-size:1.05rem;font-weight:500;
+    text-decoration:none;padding:0.9rem 1rem;border-radius:8px;
+    border-bottom:1px solid var(--border);transition:background 0.2s;
+  }
+  .mobile-menu.open a:last-child{border-bottom:none}
+  .mobile-menu.open a:active{background:var(--bg3)}
+  .mobile-menu.open a.nav-btn{
+    background:var(--accent);color:#fff;text-align:center;
+    border-bottom:none;margin-top:0.8rem;
+  }
   .hero-card{grid-template-columns:repeat(2,1fr)}
   .footer-grid{grid-template-columns:1fr}
   .section,.cta-section{padding:4rem 1.25rem}
@@ -271,6 +287,15 @@ footer{border-top:1px solid var(--border);padding:3rem 2.5rem 2rem;max-width:110
     <span></span><span></span><span></span>
   </div>
 </nav>
+
+<!-- MOBILE MENU (capa independiente, fuera del <nav>, para que cubra toda la pantalla) -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#planes-pagina">Paquetes Web</a>
+  <a href="#planes-tienda">Paquetes Tienda</a>
+  <a href="#portafolio">Portafolio</a>
+  <a href="#faq">FAQ</a>
+  <a href="#contacto" class="nav-btn">Cotizar gratis</a>
+</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -655,7 +680,8 @@ footer{border-top:1px solid var(--border);padding:3rem 2.5rem 2rem;max-width:110
 
 <script>
 function toggleNav(){
-  document.getElementById('navLinks').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('active');
 }
 function toggleFaq(btn){
   const a=btn.nextElementSibling;
@@ -667,8 +693,11 @@ function toggleFaq(btn){
   });
   if(!open){a.classList.add('open');icon.classList.add('open');}
 }
-document.querySelectorAll('#navLinks a').forEach(a=>{
-  a.addEventListener('click',()=>document.getElementById('navLinks').classList.remove('open'));
+document.querySelectorAll('#mobileMenu a').forEach(a=>{
+  a.addEventListener('click',()=>{
+    document.getElementById('mobileMenu').classList.remove('open');
+    document.getElementById('hamburger').classList.remove('active');
+  });
 });
 
 // Botones de planes → scroll a contacto con plan preseleccionado
